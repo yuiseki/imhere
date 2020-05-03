@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>#imhere by yuiseki</title>
+    <meta name="description" content="imhere">
+
+    <!-- favicon -->
+    <link rel="shortcut icon" type="image/png" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/map_family_shinken.png">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="imhere">
+
+    <!-- Firebase関連jsの読み込み -->
+    <!-- TODO: firebaseのバージョン上がったら書き換える -->
+    <script defer src="/__/firebase/7.14.2/firebase-app.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-auth.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-storage.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+    <!-- css -->
+    <style>
+      div#categories {
+        font-size: 2em;
+        margin: 15px;
+      }
+    </style>
+
+  </head>
+  <body>
+    <h1>#imhere by yuiseki</h1>
+    <h2>あらゆるマイノリティの可視化を目標としているプラットフォームです</h2>
+    <h2>Twitterアカウントでログインして自分のような属性の人間が存在していることをアピールできます</h2>
+    <div id="wrap">
+      <a class="twitter-login-button" data-size="large" href="/home.html">Login by twitter</a>
+    </div>
+    <div id="categories">
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          let app = firebase.app();
+          let features = ['auth', 'firestore', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
+          var db = firebase.firestore();
+          db.collection("categories").orderBy("name").get().then((query)=>{
+            query.forEach((cat)=>{
+              catdata = cat.data();
+              div = document.createElement("div");
+              span = document.createElement("span");
+              if (catdata.users){
+                span.innerHTML = catdata.name+" ("+catdata.users.length+")";
+              }else{
+                span.innerHTML = catdata.name;
+              }
+              div.appendChild(span);
+              document.getElementById("categories").appendChild(div);
+            })
+          })
+
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    </script>
+  </body>
+</html>

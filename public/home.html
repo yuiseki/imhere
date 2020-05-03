@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>#imhere by yuiseki</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/7.14.2/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/7.14.2/firebase-auth.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/7.14.2/firebase-storage.js"></script>
+    <!-- initialize the SDK after all desired features are loaded -->
+    <script defer src="/__/firebase/init.js"></script>
+    <style>
+      div.checkbox{
+        font-size:2em;
+        margin: 15px;
+      }
+      div.checkbox input{
+        transform: scale(2.0, 2.0);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>#imhere by yuiseki</h1>
+    <h2 id="header"></h2>
+    <div id="categories"></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          let app = firebase.app();
+          let features = ['auth', 'firestore', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
+          var db = firebase.firestore();
+
+          console.log("try getRedirectResult");
+          firebase.auth().getRedirectResult().then(function(result) {
+            if (result.credential) {
+              var token = result.credential.accessToken;
+              var secret = result.credential.secret;
+              firebase.auth().signInWithCredential(result.credential).catch(function(error) {
+                console.error("error signInWithCredential", error);
+              });
+              user = result.user
+              if (user) {
+                // User is signed in.
+                db.collection("users").doc(user.uid).update({
+                  displayName: user.displayName,
+                  email: user.email,
+                  photoURL: user.photoURL,
+                  token: result.credential.accessToken,
+                  secret: result.credential.secret
+                });
+                profile = user.displayName+" "+user.email;
+                document.getElementById("header").innerHTML = profile;
+
+                db.collection("users").doc(user.uid).get().then((usr)=>{
+                  categories = usr.data().categories;
+                  console.log(categories);
+                  db.collection("categories").orderBy("name").get().then((query)=>{
+                    query.forEach((cat)=>{
+                      catdata = cat.data();
+                      div = document.createElement("div");
+                      div.setAttribute("class", "checkbox");
+                      input = document.createElement("input");
+                      input.setAttribute("type", "checkbox");
+                      input.setAttribute("id", cat.id);
+                      input.setAttribute("value", cat.id);
+                      if(categories.includes(cat.id)){
+                        input.setAttribute("checked", true);
+                      }
+                      input.addEventListener("change", (e)=>{
+                        if(e.target.checked){
+                          db.collection("categories").doc(e.target.value).update({
+                            users: firebase.firestore.FieldValue.arrayUnion(user.uid)
+                          })
+                          db.collection("users").doc(user.uid).update({
+                            categories: firebase.firestore.FieldValue.arrayUnion(e.target.value)
+                          });
+                        }else{
+                          db.collection("categories").doc(e.target.value).update({
+                            users: firebase.firestore.FieldValue.arrayRemove(user.uid)
+                          })
+                          db.collection("users").doc(user.uid).update({
+                            categories: firebase.firestore.FieldValue.arrayRemove(e.target.value)
+                          });
+                        }
+                      });
+                      div.appendChild(input);
+                      span = document.createElement("span");
+                      if (catdata.users){
+                        span.innerHTML = catdata.name+" ("+catdata.users.length+")";
+                      }else{
+                        span.innerHTML = catdata.name;
+                      }
+                      div.appendChild(span);
+                      document.getElementById("categories").appendChild(div);
+                    })
+                  });
+                });
+                
+              } else {
+                // User is not signed in.
+                console.error("user is not signed in");
+              }
+            }else{
+              console.log("error getRedirectResult", "no credential");
+              var provider = new firebase.auth.TwitterAuthProvider();
+              firebase.auth().signInWithRedirect(provider);
+            }
+          }).catch(function(error) {
+            console.error("error getRedirectResult", error);
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    </script>
+  </body>
+</html>
