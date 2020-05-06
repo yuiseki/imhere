@@ -30,8 +30,10 @@
     </style>
   </head>
   <body>
-    <h1>#imhere by yuiseki</h1>
-    <h2 id="header"></h2>
+    <div class="jumbotron">
+      <h1>#imhere by yuiseki</h1>
+      <h2 id="header"></h2>
+    </div>
     <div id="categories"></div>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -74,6 +76,10 @@
                   categories = []
                   if (userdata && userdata.categories){
                     categories = userdata.categories;
+                  }
+                  public_categories = []
+                  if (userdata && userdata.public_categories){
+                    public_categories = userdata.public_categories;
                   }
                   console.log(categories);
                   db.collection("categories").orderBy("name").get().then((query)=>{
@@ -121,7 +127,27 @@
                         toggle = document.createElement("input");
                         toggle.setAttribute("type", "checkbox");
                         toggle.setAttribute("id", cat.id+"-publish");
-                        //toggle.setAttribute("checked");
+                        toggle.setAttribute("value", cat.id);
+                        if(public_categories.includes(cat.id)){
+                          toggle.setAttribute("checked", true);
+                        }
+                        toggle.addEventListener("change", (e)=>{
+                          if(e.target.checked){
+                            db.collection("categories").doc(e.target.value).update({
+                              public_users: firebase.firestore.FieldValue.arrayUnion(user.uid)
+                            })
+                            db.collection("users").doc(user.uid).update({
+                              public_categories: firebase.firestore.FieldValue.arrayUnion(e.target.value)
+                            });
+                          }else{
+                            db.collection("categories").doc(e.target.value).update({
+                              public_users: firebase.firestore.FieldValue.arrayRemove(user.uid)
+                            })
+                            db.collection("users").doc(user.uid).update({
+                              public_categories: firebase.firestore.FieldValue.arrayRemove(e.target.value)
+                            });
+                          }
+                        })
                         label = document.createElement("label");
                         label.setAttribute("for", cat.id+"toggle-publish");
                         label.innerHTML = "公開する";

@@ -47,8 +47,6 @@
         width: 9rem;
       }
       div.card img {
-        width: 100%;
-        height: auto;
       }
     </style>
 
@@ -65,43 +63,61 @@
     <div id="categories" class="card-columns">
     </div>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        try {
-          let app = firebase.app();
-          let features = ['auth', 'firestore', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-          var db = firebase.firestore();
-          db.collection("categories").orderBy("name").get().then((query)=>{
-            query.forEach((cat)=>{
-              catdata = cat.data();
-              // wrap
-              cardwrap = document.createElement("div");
-              cardwrap.setAttribute("class", "card")
-              // header
-              cardheader = document.createElement("div");
-              cardheader.setAttribute("class", "card-header");
-              if (catdata.users){
-                cardheader.innerHTML = catdata.name+"<b> ("+catdata.users.length+")</b>";
-              }else{
-                cardheader.innerHTML = catdata.name;
-              }
-              cardwrap.appendChild(cardheader);
-              // image
-              if (catdata.image_url){
-                cardimg = document.createElement("img");
-                cardimg.setAttribute("class", "card-img-top");
-                cardimg.setAttribute("src", catdata.image_url);
-                cardwrap.appendChild(cardimg);
-              }
-              //cardbody = document.createElement("div");
-              //cardbody.setAttribute("class", "card-body")
-              document.getElementById("categories").appendChild(cardwrap);
-            })
-          })
-
-        } catch (e) {
-          console.error(e);
+document.addEventListener('DOMContentLoaded', function() {
+  let app = firebase.app();
+  let features = ['auth', 'firestore', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
+  var db = firebase.firestore();
+  db.collection("categories").orderBy("name").get().then((query)=>{
+    query.forEach((cat)=>{
+      catdata = cat.data();
+      // wrap
+      cardwrap = document.createElement("div");
+      cardwrap.setAttribute("class", "card")
+      // header
+      cardheader = document.createElement("div");
+      cardheader.setAttribute("class", "card-header");
+      if (catdata.users){
+        cardheader.innerHTML = catdata.name+"<b> ("+catdata.users.length+")</b>";
+      }else{
+        cardheader.innerHTML = catdata.name;
+      }
+      cardwrap.appendChild(cardheader);
+      // body
+      if (catdata.public_users){
+        cardbody = document.createElement("div");
+        cardbody.setAttribute("class", "card-body")
+        for (var i = 0; i < catdata.public_users.length; i++){
+          user_id = catdata.public_users[i];
+          a = document.createElement("a");
+          a.setAttribute("class", "user-prof")
+          a.setAttribute("data-user-id", user_id);
+          a.setAttribute("href", "");
+          img = document.createElement("img");
+          img.setAttribute("src", "");
+          img.setAttribute("width", "25");
+          img.setAttribute("height", "25");
+          a.appendChild(img);
+          cardbody.appendChild(a)
         }
-      });
+        cardwrap.appendChild(cardbody);
+      }
+      document.getElementById("categories").appendChild(cardwrap);
+    });
+  }).catch((e) => {
+    console.log(e)
+  }).then(()=>{
+    a_s = Array.from(document.getElementsByClassName("user-prof"));
+    a_s.forEach((a)=>{
+      user_id = a.dataset.userId;
+      db.collection("users").doc(user_id).get().then((q)=>{
+        user = q.data();
+        a.href = "https://twitter.com/"+user.screenName;
+        i = a.getElementsByTagName("img")[0];
+        i.src = user.photoURL;
+      })
+    })
+  })
+});
     </script>
   </body>
 </html>
