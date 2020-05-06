@@ -14,13 +14,18 @@
     <script defer src="/__/firebase/7.14.2/firebase-storage.js"></script>
     <!-- initialize the SDK after all desired features are loaded -->
     <script defer src="/__/firebase/init.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <style>
-      div.checkbox{
+      div.checkbox-wrap{
         font-size:2em;
         margin: 15px;
       }
-      div.checkbox input{
+      div.checkbox-wrap input{
         transform: scale(2.0, 2.0);
+        margin-right: 15px;
       }
     </style>
   </head>
@@ -38,8 +43,6 @@
           console.log("try getRedirectResult");
           firebase.auth().getRedirectResult().then(function(result) {
             if (result.credential) {
-              var token = result.credential.accessToken;
-              var secret = result.credential.secret;
               firebase.auth().signInWithCredential(result.credential).catch(function(error) {
                 console.error("error signInWithCredential", error);
               });
@@ -48,22 +51,38 @@
                 // User is signed in.
                 db.collection("users").doc(user.uid).update({
                   displayName: user.displayName,
+                  screenName: result.additionalUserInfo.username,
                   email: user.email,
                   photoURL: user.photoURL,
                   token: result.credential.accessToken,
                   secret: result.credential.secret
+                }).catch(e => {
+                  db.collection("users").doc(user.uid).set({
+                    displayName: user.displayName,
+                    screenName: result.additionalUserInfo.username,
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    token: result.credential.accessToken,
+                    secret: result.credential.secret
+                  });
                 });
-                profile = user.displayName+" "+user.email;
+                profile = "@"+result.additionalUserInfo.username+" ("+user.displayName+")";
                 document.getElementById("header").innerHTML = profile;
 
                 db.collection("users").doc(user.uid).get().then((usr)=>{
-                  categories = usr.data().categories;
+                  userdata = usr.data()
+                  categories = []
+                  if (userdata && userdata.categories){
+                    categories = userdata.categories;
+                  }
                   console.log(categories);
                   db.collection("categories").orderBy("name").get().then((query)=>{
                     query.forEach((cat)=>{
                       catdata = cat.data();
-                      div = document.createElement("div");
-                      div.setAttribute("class", "checkbox");
+                      divwrap = document.createElement("div");
+                      divwrap.setAttribute("class", "checkbox-wrap card");
+                      divbody = document.createElement("div");
+                      divbody.setAttribute("class", "card-body")
                       input = document.createElement("input");
                       input.setAttribute("type", "checkbox");
                       input.setAttribute("id", cat.id);
@@ -88,15 +107,30 @@
                           });
                         }
                       });
-                      div.appendChild(input);
+                      divbody.appendChild(input);
                       span = document.createElement("span");
                       if (catdata.users){
                         span.innerHTML = catdata.name+" ("+catdata.users.length+")";
                       }else{
                         span.innerHTML = catdata.name;
                       }
-                      div.appendChild(span);
-                      document.getElementById("categories").appendChild(div);
+                      divbody.appendChild(span);
+                      if(categories.includes(cat.id)){
+                        divtoggle = document.createElement("div");
+                        divtoggle.setAttribute("class", "");
+                        toggle = document.createElement("input");
+                        toggle.setAttribute("type", "checkbox");
+                        toggle.setAttribute("id", cat.id+"-publish");
+                        //toggle.setAttribute("checked");
+                        label = document.createElement("label");
+                        label.setAttribute("for", cat.id+"toggle-publish");
+                        label.innerHTML = "公開する";
+                        divtoggle.appendChild(toggle);
+                        divtoggle.appendChild(label);
+                        divbody.appendChild(divtoggle);
+                      }
+                      divwrap.appendChild(divbody)
+                      document.getElementById("categories").appendChild(divwrap);
                     })
                   });
                 });
@@ -112,6 +146,7 @@
             }
           }).catch(function(error) {
             console.error("error getRedirectResult", error);
+            location.reload();
           });
         } catch (e) {
           console.error(e);

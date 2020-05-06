@@ -25,23 +25,44 @@
     <script defer src="/__/firebase/7.14.2/firebase-messaging.js"></script>
     <script defer src="/__/firebase/7.14.2/firebase-storage.js"></script>
     <script defer src="/__/firebase/init.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <!-- css -->
     <style>
+      html {
+        font-size: 10px;
+      }
       div#categories {
         font-size: 2em;
         margin: 15px;
+      }
+      @media (min-width: 576px){
+        .card-columns {
+          column-count: 6;
+        }
+      }
+      div.card {
+        width: 9rem;
+      }
+      div.card img {
+        width: 100%;
+        height: auto;
       }
     </style>
 
   </head>
   <body>
-    <h1>#imhere by yuiseki</h1>
-    <h2>あらゆるマイノリティの可視化を目標としているプラットフォームです</h2>
-    <h2>Twitterアカウントでログインして自分のような属性の人間が存在していることをアピールできます</h2>
-    <div id="wrap">
-      <a class="twitter-login-button" data-size="large" href="/home.html">Login by twitter</a>
+    <div class="jumbotron">
+      <h1>#imhere by yuiseki</h1>
+      <h2>あらゆるマイノリティの可視化を目標としているプラットフォームです</h2>
+      <h2>Twitterアカウントでログインして自分のような属性の人間が存在していることを世界にアピールできます</h2>
+      <div id="wrap">
+        <a class="twitter-login-button" data-size="large" href="/home.html"><img src="https://cdn.cms-twdigitalassets.com/content/dam/developer-twitter/icons/sign-in-with-twitter-gray-1-png-img-fullhd-medium.png.img.fullhd.medium.png" /></a>
+      </div>
     </div>
-    <div id="categories">
+    <div id="categories" class="card-columns">
     </div>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -52,15 +73,28 @@
           db.collection("categories").orderBy("name").get().then((query)=>{
             query.forEach((cat)=>{
               catdata = cat.data();
-              div = document.createElement("div");
-              span = document.createElement("span");
+              // wrap
+              cardwrap = document.createElement("div");
+              cardwrap.setAttribute("class", "card")
+              // header
+              cardheader = document.createElement("div");
+              cardheader.setAttribute("class", "card-header");
               if (catdata.users){
-                span.innerHTML = catdata.name+" ("+catdata.users.length+")";
+                cardheader.innerHTML = catdata.name+"<b> ("+catdata.users.length+")</b>";
               }else{
-                span.innerHTML = catdata.name;
+                cardheader.innerHTML = catdata.name;
               }
-              div.appendChild(span);
-              document.getElementById("categories").appendChild(div);
+              cardwrap.appendChild(cardheader);
+              // image
+              if (catdata.image_url){
+                cardimg = document.createElement("img");
+                cardimg.setAttribute("class", "card-img-top");
+                cardimg.setAttribute("src", catdata.image_url);
+                cardwrap.appendChild(cardimg);
+              }
+              //cardbody = document.createElement("div");
+              //cardbody.setAttribute("class", "card-body")
+              document.getElementById("categories").appendChild(cardwrap);
             })
           })
 
