@@ -38,13 +38,18 @@
         font-size: 2em;
         margin: 15px;
       }
-      @media (min-width: 576px){
+      @media (min-width: 1080px){
+        .card-columns {
+          column-count: 2;
+        }
+      }
+      @media (max-width: 1080px){
         .card-columns {
           column-count: 6;
         }
       }
       div.card {
-        width: 9rem;
+        width: 18rem;
       }
       div.card img {
       }
@@ -54,8 +59,10 @@
   <body>
     <div class="jumbotron">
       <h1>#imhere by yuiseki</h1>
-      <h2>あらゆるマイノリティの可視化を目標としているプラットフォームです</h2>
-      <h2>Twitterアカウントでログインして自分のような属性の人間が存在していることを世界にアピールできます</h2>
+      <h2>あらゆるマイノリティの可視化を目標としているプラットフォームです。</h2>
+      <h2>Twitterアカウントでログインして、自分のような属性の人間が存在していることを世界にアピールできます。</h2>
+      <h2>匿名でも顕名でも利用できます。</h2>
+      <h2>このウェブサイトから得たいかなる情報も差別に使うことを絶対に禁止します。発見した場合即座に法務省人権擁護局へ通報します。</h2>
       <div id="wrap">
         <a class="twitter-login-button" data-size="large" href="/home.html"><img src="https://cdn.cms-twdigitalassets.com/content/dam/developer-twitter/icons/sign-in-with-twitter-gray-1-png-img-fullhd-medium.png.img.fullhd.medium.png" /></a>
       </div>
